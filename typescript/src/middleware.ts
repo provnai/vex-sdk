@@ -37,7 +37,10 @@ export const vexMiddleware = (config: { identityKey: string, vanguardUrl: string
                 };
             } catch (error) {
                 console.error(`[VEX] Blocked tool execution: ${toolName}`);
-                throw new Error(`VEX Verification Failed: ${toolName} execution not authorized.`);
+                throw new Error(
+                    `VEX Verification Failed: ${toolName} execution not authorized.`,
+                    { cause: error }
+                );
             }
         }
     };

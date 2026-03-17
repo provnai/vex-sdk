@@ -74,7 +74,7 @@ export class VexAgent {
             }
 
             if (result.outcome === 'ESCALATE') {
-                throw new Error("VEX Escalated resolution timed out.");
+                throw new Error('VEX Escalated resolution timed out.');
             }
 
             // 4. Store Capability Token
@@ -100,7 +100,7 @@ export class VexAgent {
         const intent: any = {
             request_sha256: this.hashObject(params),
             confidence: 1.0,
-            capabilities: ["sdk_execution"]
+            capabilities: ['sdk_execution']
         };
         if (intentContext) {
             intent.intent_context = intentContext;
@@ -110,9 +110,9 @@ export class VexAgent {
             capsule_id: require('crypto').randomUUID(),
             outcome: 'ALLOW',
             reason_code: 'SDK_GENERATED',
-            trace_root: "00".repeat(32),
+            trace_root: '00'.repeat(32),
             nonce: Date.now(),
-            prev_hash: "00".repeat(32), // Start of chain
+            prev_hash: '00'.repeat(32), // Start of chain
             supervision: {
                 branch_completeness: 1.0,
                 contradictions: 0,
@@ -121,14 +121,14 @@ export class VexAgent {
         };
 
         const identity = {
-            aid: "00".repeat(32), // Placeholder for hardware AID
-            identity_type: "software_sim",
-            pcrs: { "0": "00".repeat(32) }
+            aid: '00'.repeat(32), // Placeholder for hardware AID
+            identity_type: 'software_sim',
+            pcrs: { '0': '00'.repeat(32) }
         };
 
         const witness = {
-            chora_node_id: "local_witness",
-            receipt_hash: "00".repeat(32),
+            chora_node_id: 'local_witness',
+            receipt_hash: '00'.repeat(32),
             timestamp: Math.floor(Date.now() / 1000)
         };
 
@@ -148,7 +148,7 @@ export class VexAgent {
         const claim = this.sdk!.createClaimNow(capsule_root);
         const keyPair = { 
             private_key: this.config.identityKey, 
-            public_key: "00".repeat(32) // In real use, this comes from the config/key derivation
+            public_key: '00'.repeat(32) // In real use, this comes from the config/key derivation
         };
         this.sdk!.setKeypair(keyPair);
         const signedClaim = this.sdk!.signClaim(claim);
@@ -165,8 +165,8 @@ export class VexAgent {
             witness_hash,
             capsule_root,
             crypto: {
-                algo: "ed25519",
-                signature_scope: "capsule_root",
+                algo: 'ed25519',
+                signature_scope: 'capsule_root',
                 signature_b64: signature.toString('base64'),
                 signature_raw: signature // Keep raw for binary spec
             }
@@ -181,7 +181,7 @@ export class VexAgent {
         
         // --- Header (76 Bytes) ---
         const header = Buffer.alloc(76);
-        header.write("VEP", 0);
+        header.write('VEP', 0);
         header.writeUInt8(0x03, 3);
         header.write(capsule.identity.aid.replace(/-/g, ''), 4, 'hex'); // Ensure hex
         header.write(capsule.capsule_root, 36, 'hex');
