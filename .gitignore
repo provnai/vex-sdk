@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+.venv/
+env/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+__pycache__/
+
+# Compiled files
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.hex
+
+# TypeScript
+lib/
+*.tsbuildinfo
+
+# Logs & Environment
+*.log
+.env
+.env.local
+.env.*.local
+*.capsule
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/

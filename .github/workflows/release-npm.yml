@@ -1,0 +1,40 @@
+name: Publish TypeScript Distribution
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build-n-publish:
+    name: Build and publish to NPM
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # For future provenance support
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        registry-url: 'https://registry.npmjs.org'
+        scope: '@provnai'
+    
+    - name: Install dependencies
+      run: |
+        cd typescript
+        npm install
+        
+    - name: Build package
+      run: |
+        cd typescript
+        npm run build
+        
+    - name: Publish to NPM 📦
+      run: |
+        cd typescript
+        npm publish --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
