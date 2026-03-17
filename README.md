@@ -3,8 +3,8 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![PyPI version](https://img.shields.io/pypi/v/provn-vex-sdk.svg)](https://pypi.org/project/provn-vex-sdk/)
 [![NPM version](https://img.shields.io/npm/v/@provnai/vex-sdk.svg)](https://www.npmjs.com/package/@provnai/vex-sdk)
-[![Python CI](https://github.com/provnai/vex-sdk/actions/workflows/ci-python.yml/badge.svg)](https://github.com/provnai/vex-sdk/actions/workflows/ci-python.yml)
-[![TypeScript CI](https://github.com/provnai/vex-sdk/actions/workflows/ci-typescript.yml/badge.svg)](https://github.com/provnai/vex-sdk/actions/workflows/ci-typescript.yml)
+[![Python CI](https://github.com/provnai/vex-sdk/actions/workflows/ci-python.yml/badge.svg?branch=master)](https://github.com/provnai/vex-sdk/actions/workflows/ci-python.yml)
+[![TypeScript CI](https://github.com/provnai/vex-sdk/actions/workflows/ci-typescript.yml/badge.svg?branch=master)](https://github.com/provnai/vex-sdk/actions/workflows/ci-typescript.yml)
 
 The **VEX SDK** is the official implementation of the Verifiable Execution Protocol. It provides a "black box recorder" for AI agents, making every tool call, decision, and API request mathematically verifiable and cryptographically anchored to hardware.
 

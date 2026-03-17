@@ -2,11 +2,11 @@ name: TypeScript CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
     paths:
       - 'typescript/**'
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
     paths:
       - 'typescript/**'
 
