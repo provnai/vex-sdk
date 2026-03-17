@@ -1,14 +1,8 @@
 name: TypeScript CI
 
 on:
-  push:
-    branches: [ master ]
-    paths:
-      - 'typescript/**'
-  pull_request:
-    branches: [ master ]
-    paths:
-      - 'typescript/**'
+  push: {}
+  pull_request: {}
 
 jobs:
   test:

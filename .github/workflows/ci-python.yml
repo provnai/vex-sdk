@@ -1,14 +1,8 @@
 name: Python CI
 
 on:
-  push:
-    branches: [ master ]
-    paths:
-      - 'python/**'
-  pull_request:
-    branches: [ master ]
-    paths:
-      - 'python/**'
+  push: {}
+  pull_request: {}
 
 jobs:
   test:

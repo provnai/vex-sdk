@@ -137,9 +137,10 @@ class VexAgent:
         )
 
         # Signing (Real Ed25519 Hardware Seal)
-        # provn_sdk.sign_claim(private_key, claim_dict)
-        # It usually returns a dict with 'signature' as a hex string
-        signed_claim = provn_sdk.sign_claim(self.identity_key, {"data": capsule_root, "timestamp": int(time.time())})
+        # Uses provn_sdk.ProvnSDK.sign_claim(claim, private_key_hex)
+        sdk = provn_sdk.ProvnSDK()
+        claim = {"data": capsule_root, "timestamp": int(time.time())}
+        signed_claim = sdk.sign_claim(claim, self.identity_key)
         signature = bytes.fromhex(signed_claim["signature"])
         import base64
 

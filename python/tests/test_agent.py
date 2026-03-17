@@ -20,7 +20,7 @@ async def test_execute_constructs_capsule_and_sends_post():
     
     # Patch the AsyncClient class to control its behavior as a context manager
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post, \
-         patch("provn_sdk.sign_claim", return_value=signed_claim_mock):
+         patch("provn_sdk.ProvnSDK.sign_claim", return_value=signed_claim_mock):
         mock_post.return_value = mock_response
         
         result = await agent.execute("test_tool", {"foo": "bar"})
@@ -37,7 +37,7 @@ async def test_build_capsule_async():
     agent = VexAgent(**config)
     
     signed_claim_mock = {"signature": "00" * 64}
-    with patch("provn_sdk.sign_claim", return_value=signed_claim_mock):
+    with patch("provn_sdk.ProvnSDK.sign_claim", return_value=signed_claim_mock):
         capsule = await agent.build_capsule("test", {"foo": "bar"})
         assert "capsule_root" in capsule
         assert "crypto" in capsule
