@@ -1,4 +1,4 @@
-# VEX SDK: Verifiable Execution & Silicon Identity 🛡️⚓🚀
+# VEX SDK: Verifiable Execution & Silicon Identity 🛡️⚓
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![PyPI version](https://img.shields.io/pypi/v/provn-vex-sdk.svg)](https://pypi.org/project/provn-vex-sdk/)
