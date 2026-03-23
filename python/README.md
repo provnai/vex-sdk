@@ -1,4 +1,4 @@
-# VEX SDK for Python (v1.5.0) 🛡️🐍
+# VEX SDK for Python (v1.6.0) 🛡️🐍
 ## Cognitive Routing & Silicon-Rooted Evidence
 
 The `provn-vex-sdk` is the high-level implementation of the VEX Protocol. It builds directly on top of the base `provn-sdk` to provide verifiable loops for AI agents.

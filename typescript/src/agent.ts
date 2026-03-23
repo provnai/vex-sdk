@@ -14,18 +14,35 @@
  * limitations under the License.
  */
 
+import * as crypto from 'crypto';
+const { canonicalize } = require('json-canonicalize');
 import axios from 'axios';
-import { VEPBuilder, VexPillars } from './builder';
+import { VEPBuilder, VexCapsule, IntentSegment, AuthoritySegment } from './builder';
 import { ProvnSDK, init } from '@provncloud/sdk';
+const { CipherSuite } = require('hpke-js');
+const { DhkemX25519HkdfSha256, HkdfSha256 } = require('@hpke/dhkem-x25519');
+const { Aes128Gcm } = require('@hpke/core');
 
 export interface VexConfig {
     identityKey: string;     // Hex or Base64 Ed25519 private key
     vanguardUrl: string;     // Target proxy endpoint (McpVanguard/VEX sidecar)
+    aid?: string;            // Agent Identity ID (NEW in v3)
+}
+
+export interface VexResult {
+    status: string;
+    outcome: 'ALLOW' | 'HALT' | 'ESCALATE';
+    reason_code?: string;
+    capsule_root: string;
+    capability_token?: string;
+    [key: string]: unknown;
 }
 
 export class VexAgent {
     private config: VexConfig;
     private sdk: ProvnSDK | null = null;
+
+    private currentToken?: string;
 
     constructor(config: VexConfig) {
         this.config = config;
@@ -39,9 +56,65 @@ export class VexAgent {
     }
 
     /**
+     * Retrieves the Gate's public key for HPKE encryption.
+     */
+    async fetchPublicKey(): Promise<string> {
+        const response = await axios.get(`${this.config.vanguardUrl}/public_key`);
+        return response.data.public_key;
+    }
+
+    /**
      * Executes a tool via the VEX verifiable execution loop.
      */
-    async execute(toolName: string, params: Record<string, any>, intentContext?: string): Promise<any> {
+    /**
+     * Locally verifies a VEX Continuation Token (v3) against the Gate's public key.
+     * Ensures the token was signed by the authoritative Gate and binds to the current capsule.
+     */
+    async verifyToken(tokenBase64: string, expectedCapsuleRoot?: string): Promise<boolean> {
+        const { canonicalize } = require('json-canonicalize');
+        const crypto = require('crypto');
+        
+        try {
+            const token = JSON.parse(Buffer.from(tokenBase64, 'base64').toString());
+            const gatePkBase64 = await this.fetchPublicKey();
+            const gatePublicKey = crypto.createPublicKey({
+                key: Buffer.from(gatePkBase64, 'base64'),
+                format: 'der',
+                type: 'spki', // Ed25519 in SPKI format
+            });
+
+            // 1. Re-hash the payload (JCS)
+            const payloadHash = crypto.createHash('sha256')
+                .update(canonicalize(token.payload))
+                .digest();
+
+            // 2. Verify signature
+            const isSignatureValid = crypto.verify(
+                null,
+                payloadHash,
+                gatePublicKey,
+                Buffer.from(token.signature, 'hex')
+            );
+
+            if (!isSignatureValid) {
+                console.error('VEX Token Verification Failed: Invalid Signature');
+                return false;
+            }
+
+            // 3. Bind to capsule root
+            if (expectedCapsuleRoot && token.payload.source_capsule_root !== expectedCapsuleRoot) {
+                console.error('VEX Token Verification Failed: Root Mismatch');
+                return false;
+            }
+
+            return true;
+        } catch (error) {
+            console.error('VEX Token Verification Error:', error);
+            return false;
+        }
+    }
+
+    async execute(toolName: string, params: Record<string, unknown>, intentContext?: string): Promise<VexResult> {
         await this.ensureSDK();
 
         // 1. Build Capsule
@@ -79,12 +152,13 @@ export class VexAgent {
 
             // 4. Store Capability Token
             if (result.capability_token) {
-                (this as any).currentToken = result.capability_token;
+                this.currentToken = result.capability_token;
             }
 
-            return result;
-        } catch (error: any) {
-            console.error('VEX Execution Failed:', error.response?.data || error.message);
+            return result as VexResult;
+        } catch (error) {
+            const err = error as { response?: { data: Record<string, unknown> }, message: string };
+            console.error('VEX Execution Failed:', err.response?.data || err.message);
             throw error;
         }
     }
@@ -92,13 +166,16 @@ export class VexAgent {
     /**
      * Manually construct a signed Evidence Capsule without dispatching it.
      */
-    async buildCapsule(toolName: string, params: Record<string, any>, intentContext?: string): Promise<any> {
+    async buildCapsule(toolName: string, params: Record<string, unknown>, intentContext?: string): Promise<VexCapsule> {
         await this.ensureSDK();
         // This is a simplified implementation for the SDK.
         // It demonstrates how the builder is leveraged.
         
-        const intent: any = {
+        const intent: IntentSegment = {
+            schema: 'vex/intent/v3',
+            aid: this.config.aid || '00'.repeat(32),
             request_sha256: this.hashObject(params),
+            commands: [toolName, params],
             confidence: 1.0,
             capabilities: ['sdk_execution']
         };
@@ -106,13 +183,14 @@ export class VexAgent {
             intent.intent_context = intentContext;
         }
 
-        const authority = {
+        const authority: AuthoritySegment = {
             capsule_id: require('crypto').randomUUID(),
             outcome: 'ALLOW',
             reason_code: 'SDK_GENERATED',
             trace_root: '00'.repeat(32),
             nonce: Date.now(),
             prev_hash: '00'.repeat(32), // Start of chain
+            binding_status: 'UNBOUND',
             supervision: {
                 branch_completeness: 1.0,
                 contradictions: 0,
@@ -121,7 +199,7 @@ export class VexAgent {
         };
 
         const identity = {
-            aid: '00'.repeat(32), // Placeholder for hardware AID
+            aid: this.config.aid || '00'.repeat(32),
             identity_type: 'software_sim',
             pcrs: { '0': '00'.repeat(32) }
         };
@@ -132,7 +210,43 @@ export class VexAgent {
             timestamp: Math.floor(Date.now() / 1000)
         };
 
-        const intent_hash = VEPBuilder.hashSegment(intent);
+        // --- Phase 2: HPKE Encryption (Optional/v3) ---
+        let intent_hash: string;
+        const gatePkBase64 = await this.fetchPublicKey().catch(() => null);
+        
+        if (gatePkBase64) {
+            const suite = new CipherSuite({
+                kem: new DhkemX25519HkdfSha256(),
+                kdf: new HkdfSha256(),
+                aead: new Aes128Gcm(),
+            });
+
+            const recipientPublicKeyRaw = new Uint8Array(Buffer.from(gatePkBase64, 'base64'));
+            const recipientKey = await suite.importKey('raw', recipientPublicKeyRaw, true);
+            const info = new Uint8Array(Buffer.from('vex/intent/v3'));
+            
+            const { enc, ct } = await suite.seal(
+                { 
+                    recipientPublicKey: recipientKey,
+                    info: info
+                },
+                new Uint8Array(Buffer.from(JSON.stringify(intent)))
+            );
+
+            // In v1.6.0, the "Intent Pillar" commitment is the hash of the ciphertext
+            intent_hash = require('crypto').createHash('sha256').update(Buffer.from(ct)).digest('hex');
+            
+            // Add HPKE metadata to the segment so the Gate can decrypt
+            intent.hpke = {
+                enc: Buffer.from(enc).toString('base64'),
+                ciphertext: Buffer.from(ct).toString('base64'),
+                schema: 'vex/intent/v3/encrypted'
+            };
+        } else {
+            // Fallback: Standard JCS hash for Transparent intents
+            intent_hash = VEPBuilder.hashSegment(intent);
+        }
+
         const authority_hash = VEPBuilder.hashSegment(authority);
         const identity_hash = VEPBuilder.hashSegment(identity);
         const witness_hash = VEPBuilder.hashSegment(witness, false); // Minimal scope
@@ -176,7 +290,7 @@ export class VexAgent {
     /**
      * Serializes the Evidence Capsule into the v0x03 Binary Wire format.
      */
-    toBinary(capsule: any): Buffer {
+    toBinary(capsule: VexCapsule): Buffer {
         const { canonicalize } = require('json-canonicalize');
         
         // --- Header (76 Bytes) ---
@@ -207,9 +321,7 @@ export class VexAgent {
         return Buffer.concat([header, ...segments, header]);
     }
 
-    private hashObject(obj: any): string {
-        const { canonicalize } = require('json-canonicalize');
-        const crypto = require('crypto');
+    private hashObject(obj: Record<string, unknown>): string {
         const canonicalJSON = canonicalize(obj);
         return crypto.createHash('sha256').update(canonicalJSON).digest('hex');
     }

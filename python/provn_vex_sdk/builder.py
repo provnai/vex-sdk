@@ -14,11 +14,15 @@
 
 import hashlib
 import jcs
+import struct
 from typing import Dict, List, Optional, Any, Union
 from pydantic import BaseModel, Field
 
 class IntentSegment(BaseModel):
+    schema_v: str = Field(default="vex/intent/v3", alias="schema")
+    aid: str
     request_sha256: str
+    commands: List[Any]
     confidence: float
     capabilities: List[str]
     magpie_source: Optional[str] = None
@@ -31,6 +35,8 @@ class AuthoritySegment(BaseModel):
     trace_root: str
     nonce: int
     prev_hash: Optional[str] = "00" * 32 # VEX Ledger Link
+    binding_status: str = "UNBOUND"
+    continuation_token: Optional[Dict[str, Any]] = None
     supervision: Optional[Dict[str, Any]] = Field(default_factory=dict) # MCS Signals
     gate_sensors: Optional[Dict[str, Any]] = None
     model_config = {"extra": "forbid"}
@@ -100,4 +106,3 @@ class VEPBuilder:
         # 3. Root
         root_digest = hash_internal(h12, h34)
         return root_digest.hex()
-

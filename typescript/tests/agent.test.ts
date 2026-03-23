@@ -19,11 +19,15 @@ describe('VexAgent', () => {
         vanguardUrl: 'http://localhost:3000'
     };
 
+    beforeEach(() => {
+        // Valid 32-byte X25519 public key (non-zero)
+        const validPkBase64 = 'uSJQ6R87m8qPk96hQc64b5S67890123456789012344='; 
+        mockedAxios.get.mockResolvedValue({ data: { public_key: validPkBase64 } });
+        mockedAxios.post.mockResolvedValue({ data: { status: 'verified', outcome: 'ALLOW' } });
+    });
+
     test('execute() constructs a capsule and sends it via POST', async () => {
         const agent = new VexAgent(config);
-        
-        mockedAxios.post.mockResolvedValue({ data: { status: 'verified' } });
-
         const result = await agent.execute('test_tool', { foo: 'bar' });
 
         expect(mockedAxios.post).toHaveBeenCalledWith(

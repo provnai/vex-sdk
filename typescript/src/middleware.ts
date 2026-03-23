@@ -24,7 +24,7 @@ export const vexMiddleware = (config: { identityKey: string, vanguardUrl: string
 
     return {
         // This is a pattern used by Vercel AI SDK to intercept tool calls
-        async onToolCall({ toolName, args }: { toolName: string, args: any }) {
+        async onToolCall({ toolName, args }: { toolName: string, args: Record<string, unknown> }) {
             console.log(`[VEX] Securing tool call: ${toolName}`);
             
             try {

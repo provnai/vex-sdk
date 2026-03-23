@@ -18,10 +18,15 @@ import * as crypto from 'crypto';
 const { canonicalize } = require('json-canonicalize');
 
 export interface IntentSegment {
+    schema: string;          // NEW (v3)
+    aid: string;             // NEW (v3)
     request_sha256: string;
+    commands: unknown[];         // NEW (v3)
     confidence: number;
     capabilities: string[];
     magpie_source?: string;
+    intent_context?: string;     // Context for v3 enforcement
+    [key: string]: unknown;      // For HPKE and other metadata
 }
 
 export interface AuthoritySegment {
@@ -31,24 +36,29 @@ export interface AuthoritySegment {
     trace_root: string;
     nonce: number;
     prev_hash?: string;       // VEX Ledger Link
+    binding_status: string;   // NEW (v3)
+    continuation_token?: string; // NEW (v3)
     supervision?: {           // MCS Signals
         branch_completeness?: number;
         contradictions?: number;
         confidence?: number;
     };
-    gate_sensors?: Record<string, any>;
+    gate_sensors?: Record<string, unknown>;
+    [key: string]: unknown;
 }
 
 export interface IdentitySegment {
     aid: string;
     identity_type: string;
     pcrs: Record<string, string>;
+    [key: string]: unknown;
 }
 
 export interface WitnessSegment {
     chora_node_id: string;
     receipt_hash: string;
     timestamp: number;
+    [key: string]: unknown;
 }
 
 export interface VexPillars {
@@ -58,11 +68,25 @@ export interface VexPillars {
     witness: WitnessSegment;
 }
 
+export interface VexCapsule extends VexPillars {
+    intent_hash: string;
+    authority_hash: string;
+    identity_hash: string;
+    witness_hash: string;
+    capsule_root: string;
+    crypto: {
+        algo: string;
+        signature_scope: string;
+        signature_b64: string;
+        signature_raw: Buffer;
+    };
+}
+
 export class VEPBuilder {
     /**
      * Computes the SHA-256 hash of a JCS canonicalized object.
      */
-    static hashSegment(segment: any, inclusive: boolean = true): string {
+    static hashSegment(segment: Record<string, unknown>, inclusive: boolean = true): string {
         let dataToHash = segment;
         
         if (!inclusive) {

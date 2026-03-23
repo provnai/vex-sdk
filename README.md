@@ -31,11 +31,12 @@ graph TD
 ---
 
 ## 🛡️ Core Pillars
-
-- **Verifiable Execution (VEX):** Generates tamper-proof Evidence Capsules (.capsule) for every agent action.
+ 
+- **Verifiable Execution (VEX v1.6.0):** Generates tamper-proof Evidence Capsules (.capsule) aligned with the latest protocol lockdown for "Titan-grade" assurance.
+- **HPKE Intent Privacy:** Industry-standard RFC 9180 encryption (X25519-HKDF-AESGCM) for tool parameters, ensuring zero-knowledge intent dispatch.
 - **Silicon Identity (Attest):** Natively integrates hardware-rooted trust (TPM 2.0, Secure Enclaves) to bind actions to specific physical machines.
-- **Protocol Parity:** Guaranteed bit-for-bit binary parity across Python and TypeScript implementations.
-- **Cognitive Routing:** Seamlessly intercept and secure agent tool calls via high-level decorators and middleware.
+- **Protocol Parity:** Guaranteed bit-for-bit Merkle and binary parity across Python and TypeScript implementations.
+- **High-Assurance Enforcement:** Local Ed25519 signature verification for Gate-issued continuation tokens.
 
 ---
 

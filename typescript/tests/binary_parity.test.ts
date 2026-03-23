@@ -1,5 +1,9 @@
 import { VexAgent } from '../src/agent';
 
+jest.mock('axios');
+import axios from 'axios';
+const mockedAxios = axios as jest.Mocked<typeof axios>;
+
 jest.mock('@provncloud/sdk', () => ({
     ProvnSDK: jest.fn().mockImplementation(() => ({
         generateKeypair: jest.fn(),
@@ -24,6 +28,10 @@ describe('Binary Parity', () => {
         
         const crypto = require('crypto');
         jest.spyOn(crypto, 'randomUUID').mockReturnValue('0'.repeat(64));
+
+        // Mock fetchPublicKey to avoid network calls
+        const validPkBase64 = 'uSJQ6R87m8qPk96hQc64b5S67890123456789012344=';
+        mockedAxios.get.mockResolvedValue({ data: { public_key: validPkBase64 } });
 
         // Mock SDK signing
         const mockSDK = {

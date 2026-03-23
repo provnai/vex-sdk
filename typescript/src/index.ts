@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import { VexAgent } from './agent';
-import { VEPBuilder } from './builder';
 
 export * from './agent';
 export * from './builder';

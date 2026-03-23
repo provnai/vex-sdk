@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+ 
+## [1.6.0] - 2026-03-22
+ 
+### Added
+- **VEX v1.6.0 Protocol Alignment**: 100% parity with the Rust protocol lockdown.
+- **Intent v3 Structure**: Added `schema`, `aid`, and `commands` to the Intent pillar.
+- **Authority v3 Structure**: Added `binding_status` and `continuation_token` for high-assurance enforcement.
+- **HPKE Intent Privacy**: RFC 9180 encryption (X25519-HKDF-AESGCM) for tool parameters.
+- **Local Verification**: Offline Ed25519 signature validation of Gate-issued tokens.
+ 
+### Fixed
+- **HPKE Serialization**: Resolved `hpke-js` type-format mismatches for stable cross-stack encryption.
+- **Pydantic Hardening (Python)**: Resolved field shadowing warnings in v2 models.
+- **Merkle Consistency**: Unified domain separation (0x00/0x01) for the 4-leaf Pillar Tree.
+- **Titan-Grade Hardening**: Resolved 18+ TypeScript linting errors/warnings and patched high-severity dependencies via `npm audit fix`.
+ 
 
 ## [1.5.0] - 2026-03-17
 

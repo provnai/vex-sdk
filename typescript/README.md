@@ -1,4 +1,4 @@
-# VEX SDK for TypeScript (v1.5.0) 🛡️js
+# VEX SDK for TypeScript (v1.6.0) 🛡️js
 ## Cognitive Routing & Silicon-Rooted Evidence
 
 Official TypeScript implementation of the VEX Protocol. Designed to wrap agent tool-calls in a cryptographically verifiable envelope.
